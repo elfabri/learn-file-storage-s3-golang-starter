@@ -90,13 +90,20 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
     // reset tempVidFile pointer to read again
     tempVidFile.Seek(0, io.SeekStart)
 
+    aspRat, err  := GetVideoAspectRatio(tempVidFile.Name())
+    if err != nil {
+        fmt.Printf("error getting video aspect ratio: %v\n", err)
+		respondWithError(w, http.StatusBadRequest, "Error Getting Video Aspect Ratio", err)
+        return
+    }
+
     // gen random name
     rndm := make([]byte, 32)
     rand.Read(rndm)
     name := base64.RawURLEncoding.EncodeToString(rndm)
 
     // put video into an aws object
-    key := fmt.Sprintf("%s.mp4", name)
+    key := fmt.Sprintf("%s/%s.mp4", aspRat, name)
 
     object := s3.PutObjectInput{
     	Bucket:         &cfg.s3Bucket,
