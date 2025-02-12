@@ -78,8 +78,6 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusInternalServerError, "Unable to save video on disk", err)
 		return
 	}
-    defer os.Remove(tempVidFile.Name())
-    defer tempVidFile.Close()
 
     _, err = io.Copy(tempVidFile, file)
 	if err != nil {
@@ -97,6 +95,26 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
         return
     }
 
+    // change tempvidfile to a processed fast start video
+    fastStartFilePath, err := ProcessVideoForFastStart(tempVidFile.Name())
+    if err != nil {
+        fmt.Printf("error making a fast start processed video: %v\n", err)
+		respondWithError(w, http.StatusInternalServerError, "Error Making Fast Start Video", err)
+        return
+    }
+
+    fastFile, err := os.OpenFile(fastStartFilePath, os.O_RDONLY, 0644)
+    if err != nil {
+        fmt.Printf("error opening fast start processed video: %v\n", err)
+		respondWithError(w, http.StatusInternalServerError, "Error Opening Fast Start Video", err)
+        return
+    }
+    defer os.Remove(fastFile.Name())
+    defer fastFile.Close()
+
+    tempVidFile.Close()
+    os.Remove(tempVidFile.Name())
+
     // gen random name
     rndm := make([]byte, 32)
     rand.Read(rndm)
@@ -108,7 +126,7 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
     object := s3.PutObjectInput{
     	Bucket:         &cfg.s3Bucket,
         Key:            &key,
-    	Body:           tempVidFile,
+    	Body:           fastFile,
     	ContentType:    &mimeType,
     }
 

@@ -27,4 +27,24 @@ func TestThis(t *testing.T) {
     if aspRat != "portrait" {
         t.Errorf("should have been portrait: %v\n", aspRat)
     }
+
+    fmt.Println("Running fast start encoding test:")
+
+    fastPath, err := ProcessVideoForFastStart(fileP1)
+    if err != nil {
+        t.Errorf("Unspected error: %v\n", err)
+    }
+
+    if fastPath != fileP1+".processing" {
+        t.Errorf("wrong name to file: %v\n", fastPath)
+    }
+
+    fastPath, err = ProcessVideoForFastStart(fileP2)
+    if err != nil {
+        t.Errorf("Unspected error: %v\n", err)
+    }
+
+    if fastPath != fileP2+".processing" {
+        t.Errorf("wrong name to file: %v\n", fastPath)
+    }
 }
