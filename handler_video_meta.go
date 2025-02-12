@@ -95,13 +95,6 @@ func (cfg *apiConfig) handlerVideoGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    // override video with one with signed url
-    video, err = cfg.dbVideoToSignedVideo(video)
-    if err != nil {
-        respondWithError(w, http.StatusNotFound, "Couldn't get signed video", err)
-        return
-    }
-
 	respondWithJSON(w, http.StatusOK, video)
 }
 
@@ -122,15 +115,6 @@ func (cfg *apiConfig) handlerVideosRetrieve(w http.ResponseWriter, r *http.Reque
 		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve videos", err)
 		return
 	}
-
-    // override videos with their signed urls
-    for i, video := range videos {
-        videos[i], err = cfg.dbVideoToSignedVideo(video)
-        if err != nil {
-            respondWithError(w, http.StatusNotFound, "Couldn't get signed videos", err)
-            return
-        }
-    }
 
 	respondWithJSON(w, http.StatusOK, videos)
 }
